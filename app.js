@@ -172,17 +172,43 @@ function setAuthMode(mode) {
   }
 }
 
+// Local User Accounts Storage Helper
+function getLocalUsers() {
+  const stored = localStorage.getItem('storymath_local_users');
+  if (!stored) return [];
+  try { return JSON.parse(stored); } catch(e) { return []; }
+}
+
+function saveLocalUser(user) {
+  const users = getLocalUsers();
+  users.push(user);
+  localStorage.setItem('storymath_local_users', JSON.stringify(users));
+}
+
 // REGISTER API SUBMISSION
 async function handleRegisterSubmit(e) {
-  e.preventDefault();
-  const email = document.getElementById('register-email').value.trim();
-  const username = document.getElementById('register-username').value.trim();
-  const password = document.getElementById('register-password').value.trim();
-  const role = document.getElementById('register-role').value;
+  if (e) e.preventDefault();
+  
+  const emailInput = document.getElementById('register-email');
+  const usernameInput = document.getElementById('register-username');
+  const passwordInput = document.getElementById('register-password');
+  const roleInput = document.getElementById('register-role');
+
+  const email = emailInput ? emailInput.value.trim() : '';
+  const username = usernameInput ? usernameInput.value.trim() : '';
+  const password = passwordInput ? passwordInput.value.trim() : '';
+  const role = roleInput ? roleInput.value : 'STUDENT';
+
+  if (!email || !username || !password) {
+    showToast('Lütfen tüm alanları doldurunuz.', 'fa-triangle-exclamation');
+    return;
+  }
 
   const btn = document.getElementById('btn-register-submit');
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Kaydediliyor...';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Kaydediliyor...';
+  }
 
   try {
     const res = await fetch('/api/auth/register', {
@@ -191,55 +217,95 @@ async function handleRegisterSubmit(e) {
       body: JSON.stringify({ email, username, password, role })
     });
 
-    const data = await res.json();
+    const contentType = res.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(data.error || 'Kayıt işlemi başarısız.', 'fa-triangle-exclamation');
+        return;
+      }
+      currentUser = {
+        id: data.user.id,
+        username: data.user.username,
+        email: data.user.email,
+        role: data.user.role === 'TEACHER' ? 'Öğretmen' : 'Öğrenci'
+      };
+      authToken = data.token;
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(currentUser));
+      localStorage.setItem(TOKEN_STORAGE_KEY, authToken);
 
-    if (!res.ok) {
-      throw new Error(data.error || 'Kayıt işlemi başarısız.');
+      const nameEl = document.getElementById('user-display-name');
+      if (nameEl) nameEl.innerText = `${currentUser.username} (${currentUser.role})`;
+      showToast(`PostgreSQL Veritabanına Kaydolundu! 🎉`, 'fa-circle-check');
+      switchView('dashboard');
+      return;
+    }
+    throw new Error('API unavailable, switching to local DB');
+  } catch (err) {
+    const localUsers = getLocalUsers();
+    const existing = localUsers.find(u => 
+      (u.email && u.email.toLowerCase() === email.toLowerCase()) || 
+      (u.username && u.username.toLowerCase() === username.toLowerCase())
+    );
+
+    if (existing) {
+      if (existing.email && existing.email.toLowerCase() === email.toLowerCase()) {
+        showToast('Bu e-posta adresi zaten kayıtlı.', 'fa-triangle-exclamation');
+      } else {
+        showToast('Bu kullanıcı adı zaten alınmış.', 'fa-triangle-exclamation');
+      }
+      return;
     }
 
-    currentUser = {
-      id: data.user.id,
-      username: data.user.username,
-      email: data.user.email,
-      role: data.user.role === 'TEACHER' ? 'Öğretmen' : 'Öğrenci'
-    };
-    authToken = data.token;
-
-    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(currentUser));
-    localStorage.setItem(TOKEN_STORAGE_KEY, authToken);
-
-    document.getElementById('user-display-name').innerText = `${currentUser.username} (${currentUser.role})`;
-    showToast(`PostgreSQL Veritabanına Başarıyla Kaydolundu! 🎉`, 'fa-circle-check');
-    
-    switchView('dashboard');
-
-  } catch (err) {
-    // Fallback mode if API is not hosted locally (static dev)
-    console.warn('API Register warning:', err.message);
-    currentUser = {
+    const newUser = {
+      id: 'LOCAL-' + Date.now(),
+      email: email.toLowerCase(),
       username,
-      email,
+      password,
       role: role === 'TEACHER' ? 'Öğretmen' : 'Öğrenci'
     };
+    saveLocalUser(newUser);
+
+    currentUser = {
+      id: newUser.id,
+      username: newUser.username,
+      email: newUser.email,
+      role: newUser.role
+    };
+
     localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(currentUser));
-    document.getElementById('user-display-name').innerText = `${currentUser.username} (${currentUser.role})`;
-    showToast(`Hesap oluşturuldu! Hoş geldiniz, ${username}`, 'fa-circle-check');
+    const nameEl = document.getElementById('user-display-name');
+    if (nameEl) nameEl.innerText = `${currentUser.username} (${currentUser.role})`;
+    showToast(`Hesap oluşturuldu! Hoş geldiniz, ${username} 🎉`, 'fa-circle-check');
     switchView('dashboard');
   } finally {
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Hesap Oluştur ve Kaydol';
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Hesap Oluştur ve Kaydol';
+    }
   }
 }
 
 // LOGIN API SUBMISSION
 async function handleLoginSubmit(e) {
-  e.preventDefault();
-  const usernameOrEmail = document.getElementById('login-username').value.trim();
-  const password = document.getElementById('login-password').value.trim();
+  if (e) e.preventDefault();
+  
+  const usernameInput = document.getElementById('login-username');
+  const passwordInput = document.getElementById('login-password');
+
+  const usernameOrEmail = usernameInput ? usernameInput.value.trim() : '';
+  const password = passwordInput ? passwordInput.value.trim() : '';
+
+  if (!usernameOrEmail || !password) {
+    showToast('Lütfen kullanıcı adı/e-posta ve parolayı giriniz.', 'fa-triangle-exclamation');
+    return;
+  }
 
   const btn = document.getElementById('btn-login-submit');
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Doğrulanıyor...';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Doğrulanıyor...';
+  }
 
   try {
     const res = await fetch('/api/auth/login', {
@@ -248,41 +314,70 @@ async function handleLoginSubmit(e) {
       body: JSON.stringify({ usernameOrEmail, password })
     });
 
-    const data = await res.json();
+    const contentType = res.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(data.error || 'Giriş başarısız.', 'fa-triangle-exclamation');
+        return;
+      }
+      currentUser = {
+        id: data.user.id,
+        username: data.user.username,
+        email: data.user.email,
+        role: data.user.role === 'TEACHER' ? 'Öğretmen' : 'Öğrenci'
+      };
+      authToken = data.token;
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(currentUser));
+      localStorage.setItem(TOKEN_STORAGE_KEY, authToken);
 
-    if (!res.ok) {
-      throw new Error(data.error || 'Giriş başarısız.');
+      const nameEl = document.getElementById('user-display-name');
+      if (nameEl) nameEl.innerText = `${currentUser.username} (${currentUser.role})`;
+      showToast(`Giriş başarılı! Hoş geldiniz, ${currentUser.username} 👋`, 'fa-circle-check');
+      switchView('dashboard');
+      return;
     }
-
-    currentUser = {
-      id: data.user.id,
-      username: data.user.username,
-      email: data.user.email,
-      role: data.user.role === 'TEACHER' ? 'Öğretmen' : 'Öğrenci'
-    };
-    authToken = data.token;
-
-    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(currentUser));
-    localStorage.setItem(TOKEN_STORAGE_KEY, authToken);
-
-    document.getElementById('user-display-name').innerText = `${currentUser.username} (${currentUser.role})`;
-    showToast(`Giriş başarılı! Hoş geldiniz, ${currentUser.username} 👋`, 'fa-circle-check');
-    
-    switchView('dashboard');
-
+    throw new Error('API unavailable, switching to local DB');
   } catch (err) {
-    console.warn('API Login warning:', err.message);
-    currentUser = {
-      username: usernameOrEmail || 'Kullanıcı',
-      role: 'Öğrenci'
-    };
-    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(currentUser));
-    document.getElementById('user-display-name').innerText = `${currentUser.username} (${currentUser.role})`;
-    showToast(`Giriş yapıldı: ${currentUser.username}! 👋`, 'fa-circle-check');
-    switchView('dashboard');
+    const localUsers = getLocalUsers();
+    const identifier = usernameOrEmail.toLowerCase();
+    const foundUser = localUsers.find(u => 
+      (u.email && u.email.toLowerCase() === identifier) || 
+      (u.username && u.username.toLowerCase() === identifier)
+    );
+
+    if (foundUser) {
+      if (foundUser.password !== password) {
+        showToast('Hatalı parola!', 'fa-triangle-exclamation');
+        return;
+      }
+      currentUser = {
+        id: foundUser.id,
+        username: foundUser.username,
+        email: foundUser.email,
+        role: foundUser.role
+      };
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(currentUser));
+      const nameEl = document.getElementById('user-display-name');
+      if (nameEl) nameEl.innerText = `${currentUser.username} (${currentUser.role})`;
+      showToast(`Giriş başarılı! Hoş geldiniz, ${currentUser.username} 👋`, 'fa-circle-check');
+      switchView('dashboard');
+    } else {
+      currentUser = {
+        username: usernameOrEmail,
+        role: 'Öğrenci'
+      };
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(currentUser));
+      const nameEl = document.getElementById('user-display-name');
+      if (nameEl) nameEl.innerText = `${currentUser.username} (${currentUser.role})`;
+      showToast(`Giriş yapıldı: ${currentUser.username}! 👋`, 'fa-circle-check');
+      switchView('dashboard');
+    }
   } finally {
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Giriş Yap';
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Giriş Yap';
+    }
   }
 }
 
