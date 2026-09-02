@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gerçek Hayat Story & Matematik Veritabanı Portalı</title>
+  <title>Gerçek Hayat Story & Matematik Veritabanı Portalı (Prisma & PostgreSQL)</title>
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -36,15 +36,18 @@
           <span class="text-xl font-extrabold bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-600 bg-clip-text text-transparent">
             StoryMath DB
           </span>
-          <span class="block text-xs text-slate-500 font-semibold">Veritabanı & Story Problem Portalı</span>
+          <span class="block text-xs text-slate-500 font-semibold">PostgreSQL & Prisma Veritabanı Portalı</span>
         </div>
       </div>
 
-      <div class="flex items-center gap-4">
-        <button onclick="switchView('login')" class="text-sm font-bold text-indigo-600 hover:text-indigo-800 px-4 py-2 rounded-xl transition">
+      <div class="flex items-center gap-3">
+        <button onclick="switchView('login'); setAuthMode('login');" class="text-sm font-bold text-indigo-600 hover:text-indigo-800 px-4 py-2 rounded-xl transition">
           Giriş Yap
         </button>
-        <button onclick="quickDemoLogin()" class="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-lg shadow-indigo-200 transition glow-on-hover flex items-center gap-2">
+        <button onclick="switchView('login'); setAuthMode('register');" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-sm font-bold px-4 py-2 rounded-xl transition border border-indigo-100">
+          Kayıt Ol
+        </button>
+        <button onclick="quickDemoLogin()" class="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-sm font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-indigo-200 transition glow-on-hover flex items-center gap-2">
           <i class="fa-solid fa-bolt"></i> Demo Başlat
         </button>
       </div>
@@ -54,8 +57,8 @@
     <div class="max-w-7xl mx-auto px-6 py-12 lg:py-20 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
       
       <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
-        <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-extrabold uppercase tracking-wide">
-          <i class="fa-solid fa-star text-amber-500"></i> AI Studio Sistem İstem Standardı
+        <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-extrabold uppercase tracking-wide">
+          <i class="fa-solid fa-database text-emerald-600"></i> Prisma ORM & PostgreSQL Bağlı (Vercel Ready)
         </span>
 
         <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 leading-tight">
@@ -63,35 +66,35 @@
         </h1>
 
         <p class="text-lg text-slate-600 max-w-2xl font-medium leading-relaxed">
-          Minecraft, Futbol, Uzay ve Kediler gibi sevilen temalarla zenginleştirilmiş matematik problemleri oluşturun, kendi soru veritabanınızı yönetin ve öğrencilerin çözümlerini anında doğrulayın.
+          PostgreSQL veritabanı desteği ile kendi kullanıcı hesabınızı oluşturun, soruları güvenle saklayın ve zengin temalı problemlerle matematiği eğlenceli hale getirin.
         </p>
 
         <!-- CTA Buttons -->
         <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4">
-          <button onclick="switchView('login')" class="w-full sm:w-auto bg-gradient-to-r from-indigo-600 via-purple-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-extrabold text-base px-8 py-4 rounded-2xl shadow-xl shadow-indigo-200 transition flex items-center justify-center gap-3">
-            <i class="fa-solid fa-right-to-bracket"></i>
-            Giriş Ekranına Git
+          <button onclick="switchView('login'); setAuthMode('register');" class="w-full sm:w-auto bg-gradient-to-r from-indigo-600 via-purple-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-extrabold text-base px-8 py-4 rounded-2xl shadow-xl shadow-indigo-200 transition flex items-center justify-center gap-3">
+            <i class="fa-solid fa-user-plus"></i>
+            Ücretsiz Kayıt Ol
           </button>
           
-          <button onclick="quickDemoLogin()" class="w-full sm:w-auto glass-card hover:bg-white text-slate-800 font-bold text-base px-8 py-4 rounded-2xl border border-slate-200 transition flex items-center justify-center gap-3">
-            <i class="fa-solid fa-database text-indigo-600"></i>
-            Veritabanı İncele (Demo)
+          <button onclick="switchView('login'); setAuthMode('login');" class="w-full sm:w-auto glass-card hover:bg-white text-slate-800 font-bold text-base px-8 py-4 rounded-2xl border border-slate-200 transition flex items-center justify-center gap-3">
+            <i class="fa-solid fa-right-to-bracket text-indigo-600"></i>
+            Hesabıma Giriş Yap
           </button>
         </div>
 
         <!-- Quick Metrics -->
         <div class="pt-8 border-t border-slate-200/60 grid grid-cols-3 gap-6 max-w-lg mx-auto lg:mx-0">
           <div>
-            <div class="text-2xl font-black text-slate-900">800+</div>
-            <div class="text-xs font-semibold text-slate-500">Soru Kombinasyonu</div>
+            <div class="text-2xl font-black text-slate-900">PostgreSQL</div>
+            <div class="text-xs font-semibold text-slate-500">Canlı Veritabanı</div>
           </div>
           <div>
             <div class="text-2xl font-black text-indigo-600">10 Konu</div>
             <div class="text-xs font-semibold text-slate-500">5-8. Sınıf Müfredatı</div>
           </div>
           <div>
-            <div class="text-2xl font-black text-purple-600">8 Tema</div>
-            <div class="text-xs font-semibold text-slate-500">Eğlenceli İçerik</div>
+            <div class="text-2xl font-black text-purple-600">JWT</div>
+            <div class="text-xs font-semibold text-slate-500">Güvenli Oturum</div>
           </div>
         </div>
 
@@ -108,7 +111,7 @@
                 <span class="text-xs text-indigo-600 font-semibold">6. Sınıf Kesirler</span>
               </div>
             </div>
-            <span class="bg-emerald-100 text-emerald-700 text-xs font-extrabold px-2.5 py-1 rounded-lg">Aktif Veritabanı</span>
+            <span class="bg-emerald-100 text-emerald-700 text-xs font-extrabold px-2.5 py-1 rounded-lg">PostgreSQL DB</span>
           </div>
 
           <p class="text-xs text-slate-600 leading-relaxed">
@@ -125,7 +128,6 @@
           </div>
         </div>
         
-        <!-- Glow Backdrop -->
         <div class="absolute -inset-4 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-3xl opacity-20 blur-2xl -z-10"></div>
       </div>
 
@@ -138,21 +140,21 @@
         
         <div class="glass-card p-6 rounded-3xl border border-slate-100 hover:border-indigo-200 transition">
           <div class="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl font-bold mb-4">
-            <i class="fa-solid fa-database"></i>
+            <i class="fa-solid fa-server"></i>
           </div>
-          <h3 class="font-extrabold text-lg text-slate-900 mb-2">Esnek Veritabanı</h3>
+          <h3 class="font-extrabold text-lg text-slate-900 mb-2">Prisma & PostgreSQL</h3>
           <p class="text-sm text-slate-600 leading-relaxed">
-            Soruları filtreleyin, arayın, kendi soru kayıtlarınızı ekleyin veya veritabanını JSON/CSV formatında dışa aktarın.
+            db.prisma.io üzerindeki PostgreSQL veritabanı ile verileriniz bulutta güvenle saklanır ve Vercel serverless API ile senkronize çalışır.
           </p>
         </div>
 
         <div class="glass-card p-6 rounded-3xl border border-slate-100 hover:border-purple-200 transition">
           <div class="w-12 h-12 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center text-xl font-bold mb-4">
-            <i class="fa-solid fa-gamepad"></i>
+            <i class="fa-solid fa-user-shield"></i>
           </div>
-          <h3 class="font-extrabold text-lg text-slate-900 mb-2">Eğlenceli Temalar</h3>
+          <h3 class="font-extrabold text-lg text-slate-900 mb-2">Güvenli Oturum</h3>
           <p class="text-sm text-slate-600 leading-relaxed">
-            Minecraft, Futbol, Uzay, Kediler ve Süper Kahramanlar gibi çocukların ilgisini çeken evrenlerle matematiği sevdirin.
+            Parolalar bcryptjs ile şifrelenir ve JWT jetonları ile güvenli kullanıcı doğrulaması sağlanır.
           </p>
         </div>
 
@@ -171,13 +173,13 @@
 
     <!-- Landing Footer -->
     <footer class="w-full text-center py-6 text-xs text-slate-500 font-medium border-t border-slate-200/60">
-      StoryMath DB &copy; 2026 - AI Studio System Instruction Standardı
+      StoryMath DB &copy; 2026 - Prisma ORM & PostgreSQL (Vercel)
     </footer>
   </section>
 
 
   <!-- ========================================== -->
-  <!-- 2. GİRİŞ EKRANI (LOGIN VIEW) -->
+  <!-- 2. GİRİŞ VE KAYIT EKRANI (AUTH VIEW) -->
   <!-- ========================================== -->
   <section id="view-login" class="app-view min-h-screen flex items-center justify-center p-4">
     
@@ -190,28 +192,23 @@
 
       <div class="glass-card rounded-3xl p-8 border border-white shadow-2xl relative">
         
-        <!-- Header -->
-        <div class="text-center mb-8">
-          <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white flex items-center justify-center text-3xl mx-auto mb-3 shadow-lg shadow-indigo-200">
-            <i class="fa-solid fa-user-lock"></i>
-          </div>
-          <h2 class="text-2xl font-black text-slate-900">Uygulamaya Giriş Yap</h2>
-          <p class="text-xs font-semibold text-slate-500 mt-1">Veritabanına ve problem portalına erişin</p>
-        </div>
-
-        <!-- Role Selector Tabs -->
+        <!-- Auth Mode Toggle (Giriş Yap vs Kayıt Ol) -->
         <div class="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-2xl mb-6 text-xs font-bold">
-          <button id="role-student" onclick="setLoginRole('student')" class="py-2.5 rounded-xl bg-white text-indigo-700 shadow-sm transition">
-            👨‍🎓 Öğrenci Modu
+          <button id="auth-tab-login" onclick="setAuthMode('login')" class="py-2.5 rounded-xl bg-white text-indigo-700 shadow-sm transition">
+            🔑 Giriş Yap
           </button>
-          <button id="role-teacher" onclick="setLoginRole('teacher')" class="py-2.5 rounded-xl text-slate-600 hover:text-slate-900 transition">
-            👩‍🏫 Öğretmen / Admin
+          <button id="auth-tab-register" onclick="setAuthMode('register')" class="py-2.5 rounded-xl text-slate-600 hover:text-slate-900 transition">
+            ✨ Kayıt Ol
           </button>
         </div>
 
-        <!-- Login Form -->
-        <form id="login-form" onsubmit="handleLoginSubmit(event)" class="space-y-4">
-          
+        <!-- LOGIN FORM -->
+        <form id="form-login" onsubmit="handleLoginSubmit(event)" class="space-y-4">
+          <div class="text-center mb-6">
+            <h2 class="text-2xl font-black text-slate-900">Tekrar Hoş Geldiniz</h2>
+            <p class="text-xs font-semibold text-slate-500 mt-1">PostgreSQL veritabanınıza ve hesabınıza erişin</p>
+          </div>
+
           <div>
             <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
               Kullanıcı Adı veya E-posta
@@ -222,7 +219,7 @@
                 type="text" 
                 id="login-username" 
                 required 
-                placeholder="Örn: ahmet_ogretmen veya ogrenci1" 
+                placeholder="Örn: ahmet_ogretmen veya ahmet@gmail.com" 
                 class="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-xl pl-10 pr-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none font-medium"
               />
             </div>
@@ -244,17 +241,78 @@
             </div>
           </div>
 
-          <div class="flex items-center justify-between text-xs font-semibold text-slate-600 pt-1">
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" class="rounded text-indigo-600 focus:ring-indigo-500" checked />
-              Beni Hatırla
-            </label>
-            <a href="#" onclick="showToast('Demo için parola gerekmemektedir!', 'fa-info'); return false;" class="text-indigo-600 hover:underline">Parolamı Unuttum</a>
+          <button type="submit" id="btn-login-submit" class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-extrabold py-3.5 px-4 rounded-xl shadow-lg shadow-indigo-200 transition flex items-center justify-center gap-2 text-sm">
+            <i class="fa-solid fa-right-to-bracket"></i> Giriş Yap
+          </button>
+        </form>
+
+        <!-- REGISTER FORM -->
+        <form id="form-register" onsubmit="handleRegisterSubmit(event)" class="hidden space-y-4">
+          <div class="text-center mb-6">
+            <h2 class="text-2xl font-black text-slate-900">Yeni Hesap Oluştur</h2>
+            <p class="text-xs font-semibold text-slate-500 mt-1">PostgreSQL veritabanına doğrudan kaydolun</p>
           </div>
 
-          <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-extrabold py-3.5 px-4 rounded-xl shadow-lg shadow-indigo-200 transition flex items-center justify-center gap-2 text-sm">
-            <i class="fa-solid fa-right-to-bracket"></i>
-            Giriş Yap
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+              E-posta Adresi
+            </label>
+            <div class="relative">
+              <i class="fa-solid fa-envelope absolute left-4 top-3.5 text-slate-400 text-sm"></i>
+              <input 
+                type="email" 
+                id="register-email" 
+                required 
+                placeholder="ornek@domain.com" 
+                class="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-xl pl-10 pr-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none font-medium"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+              Kullanıcı Adı
+            </label>
+            <div class="relative">
+              <i class="fa-solid fa-user absolute left-4 top-3.5 text-slate-400 text-sm"></i>
+              <input 
+                type="text" 
+                id="register-username" 
+                required 
+                placeholder="Kullanıcı adı seçin" 
+                class="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-xl pl-10 pr-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none font-medium"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+              Parola
+            </label>
+            <div class="relative">
+              <i class="fa-solid fa-lock absolute left-4 top-3.5 text-slate-400 text-sm"></i>
+              <input 
+                type="password" 
+                id="register-password" 
+                required 
+                placeholder="En az 4 karakter" 
+                class="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-xl pl-10 pr-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none font-medium"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+              Kullanıcı Rolü
+            </label>
+            <select id="register-role" class="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-xl p-3 font-medium outline-none">
+              <option value="STUDENT">👨‍🎓 Öğrenci</option>
+              <option value="TEACHER">👩‍🏫 Öğretmen / Yönetici</option>
+            </select>
+          </div>
+
+          <button type="submit" id="btn-register-submit" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold py-3.5 px-4 rounded-xl shadow-lg shadow-emerald-200 transition flex items-center justify-center gap-2 text-sm">
+            <i class="fa-solid fa-user-plus"></i> Hesap Oluştur ve Kaydol
           </button>
         </form>
 
@@ -293,7 +351,7 @@
               StoryMath DB Portal
             </h1>
             <p class="text-xs font-medium text-slate-500">
-              Kayıtlı Veritabanı & İnteraktif Problem Yönetimi
+              PostgreSQL & Prisma Veritabanı Yönetimi
             </p>
           </div>
         </div>
@@ -303,7 +361,7 @@
           <!-- Active User Badge -->
           <div class="flex items-center gap-2 text-xs font-bold bg-white/80 border border-slate-200 px-3 py-2 rounded-xl">
             <i class="fa-solid fa-user-circle text-indigo-600 text-base"></i>
-            <span id="user-display-name">Ahmet Öğretmen (Demo)</span>
+            <span id="user-display-name">Demo Kullanıcı</span>
           </div>
 
           <!-- Stats Badges -->
@@ -330,7 +388,7 @@
     <!-- Dashboard Main Content Container -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6">
 
-      <!-- Navigation Tabs (Database View vs Generator View vs Add Record) -->
+      <!-- Navigation Tabs -->
       <div class="flex items-center justify-between border-b border-slate-200/80 mb-6 no-print overflow-x-auto">
         <div class="flex gap-2 pb-2">
           <button id="tab-btn-db" onclick="switchDashboardTab('db')" class="px-5 py-3 rounded-2xl text-sm font-extrabold flex items-center gap-2 transition bg-indigo-600 text-white shadow-md">
@@ -362,7 +420,7 @@
               type="text" 
               id="db-search" 
               oninput="filterDatabase()" 
-              placeholder="Veritabanında ara (başlık, konu, hikaye)..." 
+              placeholder="PostgreSQL veritabanında ara..." 
               class="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-xl pl-9 pr-4 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none font-medium"
             />
           </div>
@@ -426,7 +484,6 @@
             </table>
           </div>
 
-          <!-- Empty Database State -->
           <div id="db-empty-state" class="hidden text-center py-12 px-4">
             <i class="fa-solid fa-folder-open text-4xl text-slate-300 mb-3"></i>
             <h3 class="text-base font-bold text-slate-700">Veritabanında Kayıt Bulunamadı</h3>
@@ -545,7 +602,6 @@
           <!-- Problem Presentation Card -->
           <div id="problem-card" class="glass-card rounded-3xl p-6 sm:p-8 border border-white animate-fade-in relative overflow-hidden">
             
-            <!-- Header Banner -->
             <div class="flex items-center justify-between pb-6 mb-6 border-b border-slate-100">
               <div class="flex items-center gap-3">
                 <div id="problem-icon" class="text-3xl p-3 bg-amber-50 rounded-2xl border border-amber-100">
@@ -565,15 +621,12 @@
               </span>
             </div>
 
-            <!-- Story Intro Paragraph -->
             <div class="prose max-w-none text-slate-700 text-base leading-relaxed mb-6" id="problem-story"></div>
 
-            <!-- Question Box (Bold) -->
             <div class="bg-indigo-50/70 border border-indigo-100 p-5 rounded-2xl mb-6">
               <p id="problem-question" class="text-base sm:text-lg font-extrabold text-indigo-950"></p>
             </div>
 
-            <!-- Interactive Answer Form -->
             <div class="no-print bg-slate-50/80 border border-slate-200/80 p-5 rounded-2xl mb-6">
               <label for="student-answer" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
                 ✏️ Cevabınızı Giriniz:
@@ -713,7 +766,7 @@
   <!-- Toast Container -->
   <div id="toast-container"></div>
 
-  <!-- JavaScript App & Database Engine -->
+  <!-- JavaScript App & API Engine -->
   <script src="app.js"></script>
 </body>
 </html>

@@ -1,5 +1,7 @@
 # Git Ignore
+.env
+.env.local
+node_modules/
 .DS_Store
 Thumbs.db
-node_modules/
 *.log

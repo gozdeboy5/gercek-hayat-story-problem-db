@@ -1,0 +1,20 @@
+{
+  "name": "gercek-hayat-story-problem-db",
+  "version": "1.0.0",
+  "description": "Gerçek Hayat Story Problem ve Veritabanı Portalı - Vercel & Prisma Entegrasyonu",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vercel dev",
+    "db:push": "prisma db push",
+    "db:generate": "prisma generate",
+    "postinstall": "prisma generate"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.10.2",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "prisma": "^5.10.2"
+  }
+}

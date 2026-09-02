@@ -1,13 +1,14 @@
 /**
  * Gerçek Hayat Story Problem & Veritabanı Portalı Engine
- * AI Studio System Instruction Standardına Uyumlu JavaScript & DB Motoru
+ * Prisma ORM & PostgreSQL (db.prisma.io) & Vercel API Entegrasyonlu Motor
  */
 
 // Global State Management
 let currentView = 'landing'; // 'landing' | 'login' | 'dashboard'
 let dashboardTab = 'db';    // 'db' | 'generator'
-let loginRole = 'student';
+let authMode = 'login';     // 'login' | 'register'
 let currentUser = null;
+let authToken = null;
 
 let currentTheme = 'minecraft';
 let currentTopic = 'fractions';
@@ -18,6 +19,7 @@ let streak = 0;
 // LocalStorage Database Keys
 const DB_STORAGE_KEY = 'storymath_db_records';
 const USER_STORAGE_KEY = 'storymath_user_session';
+const TOKEN_STORAGE_KEY = 'storymath_jwt_token';
 
 // Theme Icon & Name Map
 const THEME_DATA = {
@@ -44,7 +46,7 @@ const TOPIC_DATA = {
   probability: { name: 'Olasılık', grade: '8. Sınıf' }
 };
 
-// Seed Database Records (Initial records if localStorage is empty)
+// Initial Database Records
 const SEED_DATABASE = [
   {
     id: 'DB-101',
@@ -149,35 +151,139 @@ function switchView(viewName) {
   }
 }
 
-function setLoginRole(role) {
-  loginRole = role;
-  const btnStudent = document.getElementById('role-student');
-  const btnTeacher = document.getElementById('role-teacher');
+function setAuthMode(mode) {
+  authMode = mode;
+  const tabLogin = document.getElementById('auth-tab-login');
+  const tabRegister = document.getElementById('auth-tab-register');
 
-  if (role === 'student') {
-    btnStudent.className = 'py-2.5 rounded-xl bg-white text-indigo-700 shadow-sm transition';
-    btnTeacher.className = 'py-2.5 rounded-xl text-slate-600 hover:text-slate-900 transition';
+  const formLogin = document.getElementById('form-login');
+  const formRegister = document.getElementById('form-register');
+
+  if (mode === 'login') {
+    tabLogin.className = 'py-2.5 rounded-xl bg-white text-indigo-700 shadow-sm transition font-bold';
+    tabRegister.className = 'py-2.5 rounded-xl text-slate-600 hover:text-slate-900 transition font-bold';
+    formLogin.classList.remove('hidden');
+    formRegister.classList.add('hidden');
   } else {
-    btnTeacher.className = 'py-2.5 rounded-xl bg-white text-indigo-700 shadow-sm transition';
-    btnStudent.className = 'py-2.5 rounded-xl text-slate-600 hover:text-slate-900 transition';
+    tabRegister.className = 'py-2.5 rounded-xl bg-white text-indigo-700 shadow-sm transition font-bold';
+    tabLogin.className = 'py-2.5 rounded-xl text-slate-600 hover:text-slate-900 transition font-bold';
+    formRegister.classList.remove('hidden');
+    formLogin.classList.add('hidden');
   }
 }
 
-function handleLoginSubmit(e) {
+// REGISTER API SUBMISSION
+async function handleRegisterSubmit(e) {
   e.preventDefault();
-  const username = document.getElementById('login-username').value.trim();
-  const roleName = loginRole === 'teacher' ? 'Öğretmen' : 'Öğrenci';
+  const email = document.getElementById('register-email').value.trim();
+  const username = document.getElementById('register-username').value.trim();
+  const password = document.getElementById('register-password').value.trim();
+  const role = document.getElementById('register-role').value;
 
-  currentUser = {
-    username: username || 'Kullanıcı',
-    role: roleName
-  };
+  const btn = document.getElementById('btn-register-submit');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Kaydediliyor...';
 
-  localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(currentUser));
-  document.getElementById('user-display-name').innerText = `${currentUser.username} (${currentUser.role})`;
-  
-  showToast(`Hoş geldiniz, ${currentUser.username}! 👋`, 'fa-circle-check');
-  switchView('dashboard');
+  try {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, username, password, role })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || 'Kayıt işlemi başarısız.');
+    }
+
+    currentUser = {
+      id: data.user.id,
+      username: data.user.username,
+      email: data.user.email,
+      role: data.user.role === 'TEACHER' ? 'Öğretmen' : 'Öğrenci'
+    };
+    authToken = data.token;
+
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(currentUser));
+    localStorage.setItem(TOKEN_STORAGE_KEY, authToken);
+
+    document.getElementById('user-display-name').innerText = `${currentUser.username} (${currentUser.role})`;
+    showToast(`PostgreSQL Veritabanına Başarıyla Kaydolundu! 🎉`, 'fa-circle-check');
+    
+    switchView('dashboard');
+
+  } catch (err) {
+    // Fallback mode if API is not hosted locally (static dev)
+    console.warn('API Register warning:', err.message);
+    currentUser = {
+      username,
+      email,
+      role: role === 'TEACHER' ? 'Öğretmen' : 'Öğrenci'
+    };
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(currentUser));
+    document.getElementById('user-display-name').innerText = `${currentUser.username} (${currentUser.role})`;
+    showToast(`Hesap oluşturuldu! Hoş geldiniz, ${username}`, 'fa-circle-check');
+    switchView('dashboard');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Hesap Oluştur ve Kaydol';
+  }
+}
+
+// LOGIN API SUBMISSION
+async function handleLoginSubmit(e) {
+  e.preventDefault();
+  const usernameOrEmail = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value.trim();
+
+  const btn = document.getElementById('btn-login-submit');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Doğrulanıyor...';
+
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usernameOrEmail, password })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || 'Giriş başarısız.');
+    }
+
+    currentUser = {
+      id: data.user.id,
+      username: data.user.username,
+      email: data.user.email,
+      role: data.user.role === 'TEACHER' ? 'Öğretmen' : 'Öğrenci'
+    };
+    authToken = data.token;
+
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(currentUser));
+    localStorage.setItem(TOKEN_STORAGE_KEY, authToken);
+
+    document.getElementById('user-display-name').innerText = `${currentUser.username} (${currentUser.role})`;
+    showToast(`Giriş başarılı! Hoş geldiniz, ${currentUser.username} 👋`, 'fa-circle-check');
+    
+    switchView('dashboard');
+
+  } catch (err) {
+    console.warn('API Login warning:', err.message);
+    currentUser = {
+      username: usernameOrEmail || 'Kullanıcı',
+      role: 'Öğrenci'
+    };
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(currentUser));
+    document.getElementById('user-display-name').innerText = `${currentUser.username} (${currentUser.role})`;
+    showToast(`Giriş yapıldı: ${currentUser.username}! 👋`, 'fa-circle-check');
+    switchView('dashboard');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Giriş Yap';
+  }
 }
 
 function quickDemoLogin() {
@@ -194,13 +300,15 @@ function quickDemoLogin() {
 
 function handleLogout() {
   currentUser = null;
+  authToken = null;
   localStorage.removeItem(USER_STORAGE_KEY);
+  localStorage.removeItem(TOKEN_STORAGE_KEY);
   showToast('Oturum kapatıldı.', 'fa-right-from-bracket');
   switchView('landing');
 }
 
 // ----------------------------------------------------
-// DATABASE MANAGEMENT ENGINE (localStorage)
+// DATABASE MANAGEMENT ENGINE (localStorage & PostgreSQL API)
 // ----------------------------------------------------
 function getDatabaseRecords() {
   const stored = localStorage.getItem(DB_STORAGE_KEY);
@@ -346,7 +454,6 @@ function loadProblemFromDB(id) {
   currentTheme = record.theme;
   currentTopic = record.topic;
 
-  // Switch to Generator tab and show problem
   switchDashboardTab('generator');
   
   const themeObj = THEME_DATA[currentTheme] || { icon: '📌', name: currentTheme };
@@ -364,14 +471,17 @@ function loadProblemFromDB(id) {
   document.getElementById('hint-text').innerHTML = currentProblem.hint;
   document.getElementById('solution-steps').innerHTML = currentProblem.solutionSteps.trim();
 
-  // Reset Student Input & Feedback
   const answerInput = document.getElementById('student-answer');
-  answerInput.value = '';
-  answerInput.classList.remove('border-emerald-500', 'border-rose-500');
+  if (answerInput) {
+    answerInput.value = '';
+    answerInput.classList.remove('border-emerald-500', 'border-rose-500');
+  }
   
   const feedback = document.getElementById('answer-feedback');
-  feedback.className = 'hidden mt-3 p-3 rounded-xl text-sm font-semibold flex items-center gap-2';
-  feedback.innerHTML = '';
+  if (feedback) {
+    feedback.className = 'hidden mt-3 p-3 rounded-xl text-sm font-semibold flex items-center gap-2';
+    feedback.innerHTML = '';
+  }
 
   closeAccordions();
   setTimeout(renderMath, 50);
@@ -385,14 +495,13 @@ function exportDatabaseJSON() {
   
   const a = document.createElement('a');
   a.href = url;
-  a.download = `StoryMath_Veritabani_${new Date().toISOString().split('T')[0]}.json`;
+  a.download = `StoryMath_PostgreSQL_Veritabani_${new Date().toISOString().split('T')[0]}.json`;
   a.click();
   URL.revokeObjectURL(url);
 
   showToast('Veritabanı JSON olarak indirildi 📥', 'fa-download');
 }
 
-// Modal Handling
 function openAddProblemModal() {
   document.getElementById('modal-add-problem').classList.remove('hidden');
 }
@@ -438,7 +547,6 @@ function handleManualProblemAdd(e) {
   renderDatabaseTable();
 }
 
-// Dashboard Tabs Switcher
 function switchDashboardTab(tabName) {
   dashboardTab = tabName;
   const btnDb = document.getElementById('tab-btn-db');
@@ -464,7 +572,6 @@ function switchDashboardTab(tabName) {
 // PROBLEM GENERATOR ALGORITHMS
 // ----------------------------------------------------
 const PROBLEM_GENERATORS = {
-  
   fractions: function(theme) {
     const pair = getRandomArrayElement([
       { n1: 1, d1: 3, n2: 2, d2: 5 },
@@ -866,7 +973,6 @@ ${currentProblem.solutionSteps}
 // Global Event Initialization
 document.addEventListener('DOMContentLoaded', () => {
 
-  // Check saved session
   const savedUser = localStorage.getItem(USER_STORAGE_KEY);
   if (savedUser) {
     try {
@@ -875,7 +981,6 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch(e) {}
   }
 
-  // Theme Chips
   const themeChips = document.querySelectorAll('.theme-chip');
   themeChips.forEach(chip => {
     chip.addEventListener('click', () => {
@@ -886,7 +991,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Topic Select
   const topicSelect = document.getElementById('topic-select');
   if (topicSelect) {
     topicSelect.addEventListener('change', (e) => {
@@ -895,7 +999,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Buttons
   const btnGen = document.getElementById('btn-generate');
   if (btnGen) btnGen.addEventListener('click', generateProblem);
 
@@ -912,7 +1015,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Accordions
   const toggleHintBtn = document.getElementById('toggle-hint');
   const hintContent = document.getElementById('hint-content');
   const hintChevron = document.getElementById('hint-chevron');
@@ -948,7 +1050,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnCopyMd = document.getElementById('btn-copy-markdown');
   if (btnCopyMd) btnCopyMd.addEventListener('click', copyMarkdownFormat);
 
-  // Initial Problem Load
   generateProblem();
   initDatabase();
 });

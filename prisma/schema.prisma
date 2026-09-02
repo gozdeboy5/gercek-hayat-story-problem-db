@@ -1,0 +1,47 @@
+// Prisma Schema Configuration
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  username  String    @unique
+  password  String
+  role      Role      @default(STUDENT)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  problems  Problem[]
+}
+
+model Problem {
+  id            String   @id @default(uuid())
+  title         String
+  theme         String
+  topic         String
+  grade         String
+  story         String
+  question      String
+  hint          String
+  solutionSteps String
+  correctAnswer String
+  displayAnswer String
+  date          String
+  createdAt     DateTime @default(now())
+
+  authorId      String?
+  author        User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+}
+
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+}
